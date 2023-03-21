@@ -1,0 +1,90 @@
+<div class="row">
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Doctor</h4>
+                <h6 class="card-subtitle">Update data</h6>
+                <form 
+                    (ngSubmit)="saveDoctor()"
+                    [formGroup]="doctorForm"
+                    class="form-horizontal p-t-20">
+                    <div 
+                        *ngIf="selectedDoctor.img"
+                        class="form-group row">
+                        <label for="exampleInputuname3" class="col-sm-3 control-label">Image</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <img class="w200" [src]="selectedDoctor.img | image:'doctors'" alt="" srcset="">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="exampleInputuname3" class="col-sm-3 control-label">Name</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <div class="input-group-addon"><i class="ti-user"></i></div>
+                                <input 
+                                    formControlName="name"
+                                    type="text" 
+                                    class="form-control" 
+                                    id="exampleInputuname3"
+                                    placeholder="Doctor's name">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="exampleInputEmail3" class="col-sm-3 control-label">Hospital</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <select 
+                                    formControlName="hospital"
+                                    class="form-control">
+                                    <option value="">Select hospital</option>
+                                    <option
+                                        *ngFor="let hospital of hospitals"
+                                        [value]="hospital._id">{{hospital.name}}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="offset-sm-3 col-sm-9">
+                            <div class="checkbox checkbox-success">
+                                <input id="checkbox33" type="checkbox">
+                                <label for="checkbox33">Check me out !</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row m-b-0">
+                        <div class="offset-sm-3 col-sm-9">
+                            <button
+                                [disabled]="doctorForm.invalid"
+                                type="submit" 
+                                class="btn btn-success waves-effect waves-light">
+                                <i class="fa fa-save"></i>
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div 
+        class="col"
+        *ngIf="selectedHospital">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Hospital</h4>
+                <h6 class="card-subtitle">{{selectedHospital.name}}</h6>
+            </div>
+            <img 
+                class="img-thumbnail" 
+                [src]="selectedHospital.img | image:'hospitals'" 
+                [alt]="selectedHospital.name"
+                >
+        </div>
+    </div>
+</div>

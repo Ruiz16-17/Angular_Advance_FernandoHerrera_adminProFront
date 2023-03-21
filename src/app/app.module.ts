@@ -1,34 +1,29 @@
-import { SharedModule } from './shared/shared.module';
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+
 
 import { AppComponent } from './app.component';
-import { AppRoutingModule } from './app-routing.module';
-import { AngularFireModule } from '@angular/fire/compat';
-import { environment } from 'src/environments/environment';
-import { AngularFirestoreModule } from '@angular/fire/compat/firestore';
-import { AngularFireAuthModule } from '@angular/fire/compat/auth';
-import { StoreModule } from '@ngrx/store';
-import { appReducers } from './redux/app.reducer';
-import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-import { AuthModule } from './auth/auth.module';
+import { AppRoutingModule } from './app-routing/app-routing.module';
+import { PagesModule } from './pages/pages.module';
+import { AuthModule } from './auth/auth/auth.module';
+import { NotPageFoundComponent } from './not-page-found/not-page-found.component';
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { AccountSettingsComponent } from './pages/account-settings/account-settings.component';
+import { PromisesComponent } from './pages/promises/promises.component';
+import { RxjsComponent } from './pages/rxjs/rxjs.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    NotPageFoundComponent,
+    AccountSettingsComponent,
+    PromisesComponent,
+    RxjsComponent
   ],
   imports: [
     BrowserModule,
-    AuthModule,
     AppRoutingModule,
-    AngularFireModule.initializeApp(environment.firebase),
-    AngularFirestoreModule,
-    AngularFireAuthModule,
-    StoreModule.forRoot( appReducers ),
-    StoreDevtoolsModule.instrument({
-      maxAge: 25,
-      logOnly: environment.production
-    }),
+    PagesModule,
+    AuthModule
   ],
   providers: [],
   bootstrap: [AppComponent]

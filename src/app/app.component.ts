@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { AuthService } from './auth/services/auth.service';
+import { Component } from "@angular/core";
+
 
 @Component({
   selector: 'app-root',
@@ -7,10 +7,5 @@ import { AuthService } from './auth/services/auth.service';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'incomeExpensesApp';
-
-  constructor(private authService: AuthService){
-    this.authService.initAuthListener();// Every time the application loads, it goes through on this component
-  }
-
+  title = 'adminpro';
 }

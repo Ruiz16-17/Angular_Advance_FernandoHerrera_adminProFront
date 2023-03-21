@@ -1,12 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { UserService } from 'src/app/services/user.service';
 import Swal from 'sweetalert2';
-import { AuthService } from '../services/auth.service';
-import * as actionsUI from 'src/app/shared/redux/ui.actions';
-import { Subscription } from 'rxjs';
-import { Store } from '@ngrx/store';
-import { AppState } from 'src/app/redux/app.reducer';
 
 @Component({
   selector: 'app-register',
@@ -15,57 +11,76 @@ import { AppState } from 'src/app/redux/app.reducer';
 })
 export class RegisterComponent implements OnInit {
 
-  form: FormGroup;
-  isLoading: boolean = false;
-  uiSubscription: Subscription = new Subscription();
+  public formSubmitted = false;
+
+  public registerForm = this.formBuilder.group({
+    name: ['', [Validators.required, Validators.minLength(3)]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]],
+    passwordConfirm: ['', [Validators.required]],
+    acceptTerms: [false, [Validators.required]]
+  }, {
+    validators: this.samePasswords('password', 'passwordConfirm')
+  });
 
   constructor(
     private formBuilder: FormBuilder,
-    private authService: AuthService,
-    private router: Router,
-    private store: Store<AppState>
-  ) {
+    private userService: UserService,
+    private router: Router
+    ) { }
+  
+  ngOnInit(): void {
+  }
+  
+  createUser(){
 
-    this.form = this.formBuilder.group({
-      name: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+    this.formSubmitted = true;
+
+    if (this.registerForm.invalid) {
+      return;
+    } 
+    this.userService.createUser(this.registerForm.value)
+    .subscribe(response => {
+      this.router.navigateByUrl('/')
+    }, (error) => {
+      Swal.fire('Error', error.error.msg, 'error');
     });
 
   }
 
-  ngOnInit(): void {
-    this.uiSubscription = this.store.select('ui').subscribe(ui => this.isLoading = ui.isLoading);
+  invalidField(field: string): boolean {
+    if (this.registerForm.get(field)?.invalid && this.formSubmitted) {
+      return true;
+    }
+    return false;
   }
 
-  ngOnDestroy(): void {
-    this.uiSubscription.unsubscribe(); //This removes the subscription from the store and prevents a memory leak, beacuse when page is closed, the subscription is still available
+  acceptTermsConditions(){
+    return !this.registerForm.get('acceptTerms')?.value && this.formSubmitted;
   }
 
-  createUser() {
-    if (!this.form.invalid) {
-      this.store.dispatch(actionsUI.isLoading());
-      // Swal.fire({
-      //   title: 'Loading',
-      //   didOpen: () => {
-      //     Swal.showLoading();        
-      //   }
-      // });
-      const { name, email, password } = this.form.value;
-      this.authService.createUser(name, email, password).then(credentials => {
-        this.store.dispatch(actionsUI.isLoading());
-        Swal.close();
-        this.router.navigate(['/']);
-      }).catch(err => {
+  invalidPasswords(){
+    const password = this.registerForm.get('password')?.value;
+    const passwordConfirm = this.registerForm.get('passwordConfirm')?.value;
 
-        this.store.dispatch(actionsUI.isLoading());
+    if(password !== passwordConfirm && this.formSubmitted){
+      return true;
+    }else{
+      return false;
+    }
+  }
 
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: err.message
-        })
-      });
+  samePasswords(password: string, passwordConfirm: string){
+    return (formGroup: FormGroup) => {
+      const password1Control = formGroup.get(password);
+      const password2Control = formGroup.get(passwordConfirm);
+
+      if (password1Control?.value === password2Control?.value) {
+        password2Control?.setErrors(null);
+      }else{
+        password2Control?.setErrors({isNotSame: true});
+      }
+
     }
   }
 

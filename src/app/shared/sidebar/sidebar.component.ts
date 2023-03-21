@@ -1,46 +1,29 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { filter, Subscription } from 'rxjs';
-import { AuthService } from 'src/app/auth/services/auth.service';
-import { AppState } from 'src/app/redux/app.reducer';
-import Swal from 'sweetalert2';
+import { Component, OnInit } from '@angular/core';
+import { User } from 'src/app/models/user.model';
+import { SidebarService } from 'src/app/services/sidebar.service';
+import { UserService } from 'src/app/services/user.service';
 
 @Component({
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css']
 })
-export class SidebarComponent implements OnInit, OnDestroy{
+export class SidebarComponent implements OnInit {
 
-  name: string = '';
-  userSubscription: Subscription = new Subscription();
+  public user: User = {
+    name: 'user',
+    email: 'user@gmail.com',
+    imageUrl: ''
+  };
 
   constructor(
-    private authService: AuthService,
-    private router: Router,
-    private store: Store<AppState>
-    ) { }
+    public sidebarService: SidebarService,
+    private userService: UserService
+  ) {
+    this.user = userService.user;
+  }
 
   ngOnInit(): void {
-    this.userSubscription = this.store.select('auth').pipe(
-      filter(user => user != null)
-    )
-    .subscribe((auth) => this.name = auth.user?.name!);
-  }
-
-  ngOnDestroy(): void {
-    this.userSubscription.unsubscribe();
-  }
-
-  logout(){
-    this.authService.logout().then(() => {
-      this.router.navigate(['/login']);
-    }).catch(err => Swal.fire({
-      icon: 'error',
-      title: 'Oops...',
-      text: err.message
-    }));
   }
 
 }

@@ -1,73 +1,88 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { Subscription } from 'rxjs';
-import { AppState } from 'src/app/redux/app.reducer';
-import * as actionsUI from 'src/app/shared/redux/ui.actions';
+import { LoginForm } from 'src/app/interfaces/login-form.interface';
+import { UserService } from 'src/app/services/user.service';
 import Swal from 'sweetalert2';
-import { AuthService } from '../services/auth.service';
+
+declare const google: any;
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent implements OnInit, OnDestroy {
+export class LoginComponent implements OnInit, AfterViewInit {
 
-  form: FormGroup;
-  isLoading: boolean = false;
-  uiSubscription: Subscription = new Subscription();
+  @ViewChild('googleBtn') googleBtn!: ElementRef;
+
+  public formSubmitted = false;
+  loginInfo: LoginForm = {
+    email: '',
+    password: '',
+    rememberMe: false
+  };
+
+  public loginForm: FormGroup;
 
   constructor(
-    private formBuilder: FormBuilder,
-    private authService: AuthService,
     private router: Router,
-    private store: Store<AppState>
+    private formBuilder: FormBuilder,
+    private userService: UserService,
+    private ngZone: NgZone
   ) {
 
-    this.form = this.formBuilder.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+    this.loginForm = this.formBuilder.group({
+      email: [localStorage.getItem('email') || '', [Validators.required, Validators.email]],
+      password: ['', [Validators.required]],
+      rememberMe: [false]
     });
 
   }
+  ngAfterViewInit(): void {
+    this.googleInit();
+  }
+
+  googleInit() {
+
+    google.accounts.id.initialize({
+      client_id: "698021552801-l7a0fcups0i9ii9uuprjnvd72q2md7cb.apps.googleusercontent.com",
+      callback: (response: any) => this.handleCredentialResponse(response)
+    });
+
+    google.accounts.id.renderButton(
+      //document.getElementById("buttonDiv"),
+      this.googleBtn.nativeElement,
+      { theme: "outline", size: "large" } // customization attributes
+    );
+  }
+
+  handleCredentialResponse(response: any) {
+    this.userService.loginGoogle(response.credential)
+      .subscribe(response => this.ngZone.run(() => this.router.navigateByUrl('/')));
+  }
 
   ngOnInit(): void {
-    this.uiSubscription = this.store.select('ui').subscribe(ui => this.isLoading = ui.isLoading);
   }
 
-  ngOnDestroy(): void {
-    this.uiSubscription.unsubscribe(); //This removes the subscription from the store and prevents a memory leak, beacuse when page is closed, the subscription is still available
-  }
+  login() {
 
-  login(): void {
-
-    if (!this.form.invalid) {
-
-      this.store.dispatch(actionsUI.isLoading());
-
-      // Swal.fire({
-      //   title: 'Loading',
-      //   didOpen: () => {
-      //     Swal.showLoading();        
-      //   }
-      // });
-
-      const { email, password } = this.form.value;
-      this.authService.login(email, password).then(credentials => {
-        // Swal.close();
-        this.router.navigate(['/']);
-        this.store.dispatch(actionsUI.stopLoading());
-      }).catch(err => {
-        this.store.dispatch(actionsUI.stopLoading());
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: err.message
-        })
-      });
+    if (this.loginForm.invalid) {
+      return;
     }
+
+    this.userService.login(this.loginForm.value)
+      .subscribe(response => {
+        console.log(response);
+        if (this.loginForm.get('rememberMe')?.value) {
+          localStorage.setItem('email', this.loginForm.get('email')?.value);
+        } else {
+          localStorage.removeItem('email');
+        }
+        this.router.navigateByUrl('/');
+      }, error => {
+        Swal.fire('Error', error.error.msg, 'error');
+      });
 
   }
 
